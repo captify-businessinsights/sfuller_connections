@@ -1,16 +1,4 @@
-pip install git+https://github.com/captify-sfuller/sfuller_logging {--upgrade}
+pip install git+https://github.com/captify-sfuller/sfuller_connections {--upgrade}
 
 
-
-from sfuller_logging import setup_logs
-
-log_file, log_email = setup_logs(YOUR_LOGFILE_NAME, YOUR_EMAIL) # note no file extension is needed on the logfile name
-
-try:
-    ##########################################
-    YOUR SCRIPT HERE
-    ##########################################
-
-    log_file.info("fin.")
-except Exception as e:
-    log_email.exception(f'Unhandled Exception in {__file__}\n\n')
+from sfuller_connections import query_impala, query_impala_basic, send_to_impala, send_to_s3, read_from_s3
