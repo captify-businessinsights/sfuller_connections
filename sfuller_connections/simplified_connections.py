@@ -1,4 +1,7 @@
-from .connection import ImpalaConnect, S3Connect, ImpalaConfigFromEnv, S3ConfigFromEnv
+from .impala_connection import ImpalaConnect
+from .s3_connection import S3Connect
+from .impala import ImpalaConfigFromEnv
+from .s3 import S3ConfigFromEnv
 from pickle import dump as pickle_dump, load as pickle_load
 import pandas as pd
 import os
