@@ -3,7 +3,7 @@ import s3fs
 import time
 import os
 
-from .configs import S3Config
+from .s3 import S3Config
 
 
 class S3ConnectCSV:
