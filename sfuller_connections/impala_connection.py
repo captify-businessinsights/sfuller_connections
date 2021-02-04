@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import pandas as pd
 from impala.dbapi import connect
-from .configs import ImpalaConfig
+from .impala import ImpalaConfig
 import os
 
 
