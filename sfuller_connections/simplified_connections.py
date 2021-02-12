@@ -6,7 +6,20 @@ from pickle import dump as pickle_dump, load as pickle_load
 import pandas as pd
 import os
 
+def query_impala_basic(query, config=ImpalaConfigFromEnv):
+    con = ImpalaConnect(query=query, config=config)
+    df = (ImpalaConnect.get_impala_df(con))
+    try:
+        df = df.reset_index(drop=True)
+    except AttributeError:
+        df = None
+    return df
+
 def query_impala(queryobj, config=ImpalaConfigFromEnv):
+    if isinstance(queryobj, str):
+        print("query is a string, not QueryObject. Using query_impala_basic instead")
+        return query_impala_basic(queryobj)
+        
     try:
         if os.getenv("SFULLER_LOCAL_MACHINE") == "TRUE":
             df = pickle_load(open(f"pickled_data/{queryobj.name}.sav", "rb"))
@@ -31,15 +44,6 @@ def query_impala(queryobj, config=ImpalaConfigFromEnv):
 
         except AttributeError:
             df = None
-    return df
-
-def query_impala_basic(query, config=ImpalaConfigFromEnv):
-    con = ImpalaConnect(query=query, config=config)
-    df = (ImpalaConnect.get_impala_df(con))
-    try:
-        df = df.reset_index(drop=True)
-    except AttributeError:
-        df = None
     return df
 
 # https://stackoverflow.com/questions/31071952/generate-sql-statements-from-a-pandas-dataframe
