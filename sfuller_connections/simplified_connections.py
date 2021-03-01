@@ -73,7 +73,7 @@ def send_to_impala(df, name, include_index=False, config=ImpalaConfigFromEnv):
     except:
         pass
     
-    exists = query_impala_basic(f'show tables in analytics like {name.split(".")[-1]}').shape[0]
+    exists = query_impala_basic(f'show tables in analytics like "{name.split(".")[-1]}"').shape[0]
     if exists == 1:
         print(f'{name.split(".")[-1]} already exists in analytics, inserting into it')
     elif exists == 0:
