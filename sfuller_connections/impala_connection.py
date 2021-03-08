@@ -10,7 +10,7 @@ class ImpalaConnect:
         self.query = query
         self.config = config
 
-    def get_impala_df(self):
+    def get_impala_df(self, request_pool=os.getenv("REQUEST_POOL"), mem_limit="40g"):
         with connect(host=self.config.host,
                      port=self.config.port,
                      user=self.config.user,
@@ -21,7 +21,7 @@ class ImpalaConnect:
 
             with conn.cursor() as cur:
                 for q in self.query.split(";"):
-                    cur.execute(q, configuration={"REQUEST_POOL": os.getenv("REQUEST_POOL"), "MEM_LIMIT": "40g"})
+                    cur.execute(q, configuration={"REQUEST_POOL": request_pool, "MEM_LIMIT": mem_limit})
                     try:
                         col = [desc[0] for desc in cur.description]
                         df = pd.DataFrame(cur.fetchall(), columns=col)
