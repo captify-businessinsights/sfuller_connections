@@ -6,19 +6,19 @@ from pickle import dump as pickle_dump, load as pickle_load
 import pandas as pd
 import os
 
-def query_impala_basic(query, config=ImpalaConfigFromEnv):
+def query_impala_basic(query, config=ImpalaConfigFromEnv, request_pool=os.getenv("REQUEST_POOL"), mem_limit="40g"):
     con = ImpalaConnect(query=query, config=config)
-    df = (ImpalaConnect.get_impala_df(con))
+    df = (ImpalaConnect.get_impala_df(con, request_pool=request_pool, mem_limit=mem_limit))
     try:
         df = df.reset_index(drop=True)
     except AttributeError:
         df = None
     return df
 
-def query_impala(queryobj, config=ImpalaConfigFromEnv):
+def query_impala(queryobj, config=ImpalaConfigFromEnv, request_pool=os.getenv("REQUEST_POOL"), mem_limit="40g"):
     if isinstance(queryobj, str):
         print("query is a string, not QueryObject. Using query_impala_basic instead")
-        return query_impala_basic(queryobj)
+        return query_impala_basic(queryobj, request_pool=request_pool, mem_limit=mem_limit)
         
     try:
         if os.getenv("SFULLER_LOCAL_MACHINE") == "TRUE":
@@ -27,7 +27,7 @@ def query_impala(queryobj, config=ImpalaConfigFromEnv):
             raise DontPickle 
     except:
         con = ImpalaConnect(query=queryobj.query, config=config)
-        df = (ImpalaConnect.get_impala_df(con))
+        df = (ImpalaConnect.get_impala_df(con, request_pool=request_pool, mem_limit=mem_limit))
         try:
             df = df.reset_index(drop=True)
 
