@@ -52,7 +52,15 @@ def query_impala(queryobj, config=ImpalaConfigFromEnv, request_pool=os.getenv("R
     
     if time_query:
         end_time = time.time()
-        print(end_time - start_time)
+        time_taken = end_time - start_time
+        if time_taken > 60:
+            time_taken = round(time_taken/60, 1)
+            units = "minutes"
+        else:
+            time_taken = round(time_taken, 0)
+            units = "seconds"
+            
+        print(f"query took {time_taken} {units}")
         
     return df
 
