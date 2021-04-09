@@ -27,7 +27,7 @@ def query_impala(queryobj, config=ImpalaConfigFromEnv, request_pool=os.getenv("R
     try:
         if os.getenv("SFULLER_LOCAL_MACHINE") == "TRUE":
             df = pickle_load(open(f"pickled_data/{queryobj.name}.sav", "rb"))
-            print("loading from picked state - {queryobj.name}.sav")
+            print(f"loading from picked state - {queryobj.name}.sav")
         else:
             raise DontPickle 
     except:
