@@ -5,6 +5,7 @@ from .s3 import S3ConfigFromEnv
 from pickle import dump as pickle_dump, load as pickle_load
 import pandas as pd
 import os
+import time
 
 def query_impala_basic(query, config=ImpalaConfigFromEnv, request_pool=os.getenv("REQUEST_POOL"), mem_limit="40g"):
     con = ImpalaConnect(query=query, config=config)
@@ -15,7 +16,10 @@ def query_impala_basic(query, config=ImpalaConfigFromEnv, request_pool=os.getenv
         df = None
     return df
 
-def query_impala(queryobj, config=ImpalaConfigFromEnv, request_pool=os.getenv("REQUEST_POOL"), mem_limit="40g"):
+def query_impala(queryobj, config=ImpalaConfigFromEnv, request_pool=os.getenv("REQUEST_POOL"), mem_limit="40g", time_query=True):
+    if time_query:
+        start_time = time.time()
+        
     if isinstance(queryobj, str):
         print("query is a string, not QueryObject. Using query_impala_basic instead")
         return query_impala_basic(queryobj, request_pool=request_pool, mem_limit=mem_limit)
@@ -23,6 +27,7 @@ def query_impala(queryobj, config=ImpalaConfigFromEnv, request_pool=os.getenv("R
     try:
         if os.getenv("SFULLER_LOCAL_MACHINE") == "TRUE":
             df = pickle_load(open(f"pickled_data/{queryobj.name}.sav", "rb"))
+            print("loading from picked state - {queryobj.name}.sav")
         else:
             raise DontPickle 
     except:
@@ -44,6 +49,11 @@ def query_impala(queryobj, config=ImpalaConfigFromEnv, request_pool=os.getenv("R
 
         except AttributeError:
             df = None
+    
+    if time_query:
+        end_time = time.time()
+        print(end_time - start_time)
+        
     return df
 
 # https://stackoverflow.com/questions/31071952/generate-sql-statements-from-a-pandas-dataframe
