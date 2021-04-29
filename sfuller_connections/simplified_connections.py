@@ -21,34 +21,34 @@ def query_impala(queryobj, config=ImpalaConfigFromEnv, request_pool=os.getenv("R
         start_time = time.time()
         
     if isinstance(queryobj, str):
-        print("query is a string, not QueryObject. Using query_impala_basic instead")
-        return query_impala_basic(queryobj, request_pool=request_pool, mem_limit=mem_limit)
-        
-    try:
-        if os.getenv("SFULLER_LOCAL_MACHINE") == "TRUE":
-            df = pickle_load(open(f"pickled_data/{queryobj.name}.sav", "rb"))
-            print(f"loading from picked state - {queryobj.name}.sav")
-        else:
-            raise DontPickle 
-    except:
-        con = ImpalaConnect(query=queryobj.query, config=config)
-        df = (ImpalaConnect.get_impala_df(con, request_pool=request_pool, mem_limit=mem_limit))
+        df = query_impala_basic(queryobj, request_pool=request_pool, mem_limit=mem_limit)
+   
+    else:  
         try:
-            df = df.reset_index(drop=True)
-
-            for col in df.select_dtypes(include='object').columns:
-                try:
-                    df[col] = df[col].astype('float')
-                except:
-                    pass
-            
             if os.getenv("SFULLER_LOCAL_MACHINE") == "TRUE":
-                if not os.path.exists('pickled_data'):
-                    os.makedirs('pickled_data')
-                pickle_dump(df, open(f"pickled_data/{queryobj.name}.sav", "wb"))
+                df = pickle_load(open(f"pickled_data/{queryobj.name}.sav", "rb"))
+                print(f"loading from picked state - {queryobj.name}.sav")
+            else:
+                raise DontPickle 
+        except:
+            con = ImpalaConnect(query=queryobj.query, config=config)
+            df = (ImpalaConnect.get_impala_df(con, request_pool=request_pool, mem_limit=mem_limit))
+            try:
+                df = df.reset_index(drop=True)
 
-        except AttributeError:
-            df = None
+                for col in df.select_dtypes(include='object').columns:
+                    try:
+                        df[col] = df[col].astype('float')
+                    except:
+                        pass
+
+                if os.getenv("SFULLER_LOCAL_MACHINE") == "TRUE":
+                    if not os.path.exists('pickled_data'):
+                        os.makedirs('pickled_data')
+                    pickle_dump(df, open(f"pickled_data/{queryobj.name}.sav", "wb"))
+
+            except AttributeError:
+                df = None
     
     if time_query:
         end_time = time.time()
