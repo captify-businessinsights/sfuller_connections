@@ -83,6 +83,9 @@ def sql_from_df(df, name, include_index=False):
 
 def send_to_impala(df, name, include_index=False, config=ImpalaConfigFromEnv):
     dfi = df.rename(columns = {"Unnamed: 0": "Unnamed_0"}).copy()
+    
+    if include_index:
+        dfi = dfi.reset_index()
 
     try:
         if dfi.select_dtypes('datetime').shape[1] > 0:
