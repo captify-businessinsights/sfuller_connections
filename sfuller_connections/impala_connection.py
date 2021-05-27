@@ -20,14 +20,26 @@ class ImpalaConnect:
                      auth_mechanism=self.config.auth_mechanism) as conn:
 
             with conn.cursor() as cur:
-                for q in self.query.split(";"):
+                queries = [x for x in self.query.split(";") if x.replace('\n','').replace(' ', '') != ''] # removes any queries which are blank (only \n and spaces)
+
+                i = 1
+                for q in queries:
                     cur.execute(q, configuration={"REQUEST_POOL": request_pool, "MEM_LIMIT": mem_limit})
+                    if len(queries) > 1:
+                        print(f'executing query {i} of {len(queries)}')
                     try:
                         col = [desc[0] for desc in cur.description]
                         df = pd.DataFrame(cur.fetchall(), columns=col)
                     except TypeError:
-                        print('no dataframe was returned - impala connection returning None')
                         df = None
-                    return df
+                    i += 1
+                
+                if len(queries) > 1:
+                    print(f'returning results for query {i}')
+
+                if df is None:
+                    print('no dataframe was returned - impala connection returning None')
+
+                return df
 
 
