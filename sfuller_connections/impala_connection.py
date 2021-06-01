@@ -20,7 +20,7 @@ class ImpalaConnect:
                      auth_mechanism=self.config.auth_mechanism) as conn:
 
             with conn.cursor() as cur:
-                queries = [x for x in self.query.split(";") if x.replace('\n','').replace(' ', '') != ''] # removes any queries which are blank (only \n and spaces)
+                queries = [x for x in self.query.split(";") if x.replace('\n','').replace('\t', '').replace(' ', '') != ''] # removes any queries which are blank (only \n, \t and spaces)
 
                 i = 1
                 for q in queries:
