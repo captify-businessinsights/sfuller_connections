@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name='sfuller_connections',
-      version='0.13',
+      version='0.14',
       description='connections shortcut',
       packages=['sfuller_connections'],
       author_email='sebastian.fuller@captify.co.uk',
