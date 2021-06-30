@@ -2,53 +2,59 @@ from .impala_connection import ImpalaConnect
 from .s3_connection import S3Connect
 from .impala import ImpalaConfigFromEnv
 from .s3 import S3ConfigFromEnv
+from .query_object import QueryObject
 from pickle import dump as pickle_dump, load as pickle_load
 import pandas as pd
 import os
 import time
 
-def query_impala_basic(query, config=ImpalaConfigFromEnv, request_pool=os.getenv("REQUEST_POOL"), mem_limit="40g"):
+def query_impala_basic(query, config=ImpalaConfigFromEnv, request_pool=os.getenv("REQUEST_POOL"), mem_limit="40g", floatify=True):
     con = ImpalaConnect(query=query, config=config)
     df = (ImpalaConnect.get_impala_df(con, request_pool=request_pool, mem_limit=mem_limit))
     try:
         df = df.reset_index(drop=True)
+
+        if floatify:
+            for col in df.select_dtypes(include='object').columns:
+                try:
+                    df[col] = df[col].astype('float')
+                except:
+                    pass
+
     except AttributeError:
         df = None
     return df
 
-def query_impala(queryobj, config=ImpalaConfigFromEnv, request_pool=os.getenv("REQUEST_POOL"), mem_limit="40g", time_query=True):
+
+def query_impala(queryobj, config=ImpalaConfigFromEnv, request_pool=os.getenv("REQUEST_POOL"), mem_limit="40g", time_query=True, floatify=True):
     if time_query:
         start_time = time.time()
         
-    if isinstance(queryobj, str):
-        df = query_impala_basic(queryobj, request_pool=request_pool, mem_limit=mem_limit)
+    if isinstance(queryobj, QueryObject):
+        q = queryobj.query
+    elif isinstance(queryobj, str):
+        q = queryobj
+    else:
+        print("invalid type for queryobj. Must be QueryObject or Str")
+        raise InvalidQueryType
    
-    else:  
+    has_picked_data = False
+
+    if os.getenv("SFULLER_LOCAL_MACHINE") == "TRUE" and isinstance(queryobj, QueryObject):
         try:
-            if os.getenv("SFULLER_LOCAL_MACHINE") == "TRUE":
-                df = pickle_load(open(f"pickled_data/{queryobj.name}.sav", "rb"))
-                print(f"loading from picked state - {queryobj.name}.sav")
-            else:
-                raise DontPickle 
+            df = pickle_load(open(f"pickled_data/{queryobj.name}.sav", "rb"))
+            print(f"loading from picked state - {queryobj.name}.sav")
+            has_picked_data = True
         except:
-            con = ImpalaConnect(query=queryobj.query, config=config)
-            df = (ImpalaConnect.get_impala_df(con, request_pool=request_pool, mem_limit=mem_limit))
-            try:
-                df = df.reset_index(drop=True)
+            pass
 
-                for col in df.select_dtypes(include='object').columns:
-                    try:
-                        df[col] = df[col].astype('float')
-                    except:
-                        pass
+    if not has_picked_data:
+        df = query_impala_basic(q, config=config, request_pool=request_pool, mem_limit=mem_limit, floatify=floatify)
 
-                if os.getenv("SFULLER_LOCAL_MACHINE") == "TRUE":
-                    if not os.path.exists('pickled_data'):
-                        os.makedirs('pickled_data')
-                    pickle_dump(df, open(f"pickled_data/{queryobj.name}.sav", "wb"))
-
-            except AttributeError:
-                df = None
+    if os.getenv("SFULLER_LOCAL_MACHINE") == "TRUE" and isinstance(queryobj, QueryObject) and has_picked_data == False:
+        if not os.path.exists('pickled_data'):
+            os.makedirs('pickled_data')
+        pickle_dump(df, open(f"pickled_data/{queryobj.name}.sav", "wb"))
     
     if time_query:
         end_time = time.time()
@@ -135,4 +141,7 @@ def read_from_s3(name, header, bucket=os.getenv("S3_DEFAULT"), config=S3ConfigFr
     return df
 
 class DontPickle(Exception):
+    pass
+
+class InvalidQueryType(Exception):
     pass
