@@ -31,8 +31,7 @@ class ImpalaConnect:
                      port=self.config.port,
                      user=self.config.user,
                      password=self.config.password,
-                    #  timeout=self.config.timeout,
-                     timeout = 1,
+                     timeout=self.config.timeout,
                      use_ssl=True,
                      auth_mechanism=self.config.auth_mechanism) as conn:
 
