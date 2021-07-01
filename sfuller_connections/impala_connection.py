@@ -26,45 +26,45 @@ class ImpalaConnect:
 
     def get_impala_df(self, request_pool=os.getenv("REQUEST_POOL"), mem_limit="40g"):
         start_time = time.time()
-        
-        with connect(host=self.config.host,
-                     port=self.config.port,
-                     user=self.config.user,
-                     password=self.config.password,
-                     timeout=self.config.timeout,
-                     use_ssl=True,
-                     auth_mechanism=self.config.auth_mechanism) as conn:
 
-            queries = [x for x in self.query.split(";") if x.replace('\n','').replace('\t', '').replace(' ', '') != ''] # removes any queries which are blank (only \n, \t and spaces)
-            
-            i = 1
-            for q in queries:
-                if len(queries) > 1:
-                    print(f'executing query {i} of {len(queries)}')
+        queries = [x for x in self.query.split(";") if x.replace('\n','').replace('\t', '').replace(' ', '') != ''] # removes any queries which are blank (only \n, \t and spaces)
+        i = 1
+        for q in queries:
+            if len(queries) > 1:
+                print(f'executing query {i} of {len(queries)}')
 
-                try:
+            try:
+                with connect(host=self.config.host,
+                            port=self.config.port,
+                            user=self.config.user,
+                            password=self.config.password,
+                            timeout=self.config.timeout,
+                            use_ssl=True,
+                            auth_mechanism=self.config.auth_mechanism) as conn:
                     with conn.cursor() as cur:
                         cur.execute(q, configuration={"REQUEST_POOL": request_pool, "MEM_LIMIT": mem_limit})
-                except Exception as e:
-                    error_time, length_str = time_since(start_time)
+            except Exception as e:
+                error_time, length_str = time_since(start_time)
 
-                    print("\n")
-                    print(type(e).__name__)
-                    if e.args[0]:
-                        print(e.args[0])
-                    print(f"Start time: {datetime.utcfromtimestamp(int(start_time)).strftime('%Y-%m-%d %H:%M:%S')}")
-                    print(f"Error hit at: {datetime.utcfromtimestamp(int(error_time)).strftime('%Y-%m-%d %H:%M:%S')} ({length_str})\n")
-                    print("Offending query:\n")
-                    print(q)
-                    print("\n")
-                    raise e
-
+                print("\n")
+                print(type(e).__name__)
                 try:
-                    col = [desc[0] for desc in cur.description]
-                    df = pd.DataFrame(cur.fetchall(), columns=col)
-                except TypeError: # if query doesn't return a dataframe (eg drop table statements) cur will be Nonetype and above will fail
-                    df = None
-                i += 1
+                    print(e.args[0])
+                except:
+                    pass
+                print(f"Start time: {datetime.utcfromtimestamp(int(start_time)).strftime('%Y-%m-%d %H:%M:%S')}")
+                print(f"Error hit at: {datetime.utcfromtimestamp(int(error_time)).strftime('%Y-%m-%d %H:%M:%S')} ({length_str})\n")
+                print("Offending query:\n")
+                print(q)
+                print("\n")
+                raise e
+
+            try:
+                col = [desc[0] for desc in cur.description]
+                df = pd.DataFrame(cur.fetchall(), columns=col)
+            except TypeError: # if query doesn't return a dataframe (eg drop table statements) cur will be Nonetype and above will fail
+                df = None
+            i += 1
             
             if len(queries) > 1:
                 print(f'returning results for query {i - 1}')
