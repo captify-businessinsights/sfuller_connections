@@ -32,7 +32,7 @@ class ImpalaConnect:
         for q in queries:
             if len(queries) > 1:
                 print(f'executing query {i} of {len(queries)}')
-
+            
             try:
                 with connect(host=self.config.host,
                             port=self.config.port,
@@ -43,6 +43,12 @@ class ImpalaConnect:
                             auth_mechanism=self.config.auth_mechanism) as conn:
                     with conn.cursor() as cur:
                         cur.execute(q, configuration={"REQUEST_POOL": request_pool, "MEM_LIMIT": mem_limit})
+
+                        try:
+                            col = [desc[0] for desc in cur.description]
+                            df = pd.DataFrame(cur.fetchall(), columns=col)
+                        except TypeError: # if query doesn't return a dataframe (eg drop table statements) cur will be Nonetype and above will fail
+                            df = None
             except Exception as e:
                 error_time, length_str = time_since(start_time)
 
@@ -59,11 +65,7 @@ class ImpalaConnect:
                 print("\n")
                 raise e
 
-            try:
-                col = [desc[0] for desc in cur.description]
-                df = pd.DataFrame(cur.fetchall(), columns=col)
-            except TypeError: # if query doesn't return a dataframe (eg drop table statements) cur will be Nonetype and above will fail
-                df = None
+            
             i += 1
             
             if len(queries) > 1:
