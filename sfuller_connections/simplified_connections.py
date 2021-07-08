@@ -40,7 +40,7 @@ def query_impala(queryobj, config=ImpalaConfigFromEnv, request_pool=os.getenv("R
    
     has_picked_data = False
 
-    if os.getenv("SFULLER_LOCAL_MACHINE") == "TRUE" and isinstance(queryobj, QueryObject):
+    if os.getenv("TURN_PICKLE_ON") == "TRUE" and isinstance(queryobj, QueryObject):
         try:
             df = pickle_load(open(f"pickled_data/{queryobj.name}.sav", "rb"))
             print(f"loading from picked state - {queryobj.name}.sav")
@@ -51,7 +51,7 @@ def query_impala(queryobj, config=ImpalaConfigFromEnv, request_pool=os.getenv("R
     if not has_picked_data:
         df = query_impala_basic(q, config=config, request_pool=request_pool, mem_limit=mem_limit, floatify=floatify)
 
-    if os.getenv("SFULLER_LOCAL_MACHINE") == "TRUE" and isinstance(queryobj, QueryObject) and has_picked_data == False:
+    if os.getenv("TURN_PICKLE_ON") == "TRUE" and isinstance(queryobj, QueryObject) and has_picked_data == False:
         if not os.path.exists('pickled_data'):
             os.makedirs('pickled_data')
         pickle_dump(df, open(f"pickled_data/{queryobj.name}.sav", "wb"))
