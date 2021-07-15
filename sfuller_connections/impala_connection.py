@@ -74,6 +74,7 @@ class ImpalaConnect:
             if df is None:
                 print('no dataframe was returned - impala connection returning None')
 
-            return df
+            if i > len(queries):
+                return df
 
 
