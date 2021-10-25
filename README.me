@@ -2,7 +2,7 @@ pip install git+https://github.com/captify-sfuller/sfuller_connections --upgrade
 sudo /opt/anaconda3/bin/python/bin/pip install git+https://github.com/captify-sfuller/sfuller_connections --upgrade
 
 
-from sfuller_connections import query_impala, query_impala_basic, send_to_impala, send_to_s3, read_from_s3
+from sfuller_connections import query_impala, send_to_impala
 
 
 
@@ -14,3 +14,7 @@ conda install -c conda-forge thriftpy==0.3.9 thriftpy2==0.4.10
 pip install impyla==0.16.2
 pip install git+https://github.com/captify-sfuller/thrift_sasl --no-deps
 pip install pure-sasl==0.3.0
+
+
+
+technically also available but not really meant for use: query_impala_basic, send_to_s3, read_from_s3
