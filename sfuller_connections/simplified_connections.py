@@ -111,17 +111,24 @@ def send_to_impala(df, name, include_index=False, config=ImpalaConfigFromEnv):
 
     base_sql_text = 'INSERT INTO '+name+' ('+ str(', '.join(dfi.columns)).replace('%', 'pct') + ') VALUES '
 
+    # quotation/apostrophie fix
+    apostrophie = 'THISISAPLACEHOLDERFORANAPOSTROPHIEUSEDBYSFULLERCONNECTIONS'
+    quotationmark = 'THISISAPLACEHOLDERFORAQUOTATIONMARKUSEDBYSFULLERCONNECTIONS'
+    dfi = dfi.applymap(lambda x: x if not isinstance(x, str) else x.replace("'", apostrophie).replace('"', quotationmark))
+    
     sql_text = base_sql_text
     counter = 0
-    for index, row in dfi.iterrows():       
-        sql_text = sql_text + str(tuple(row.values)) + ','   
+    for index, row in dfi.iterrows():  
+        # pandas outputs with ' as default so first switch this to " which impala prefers
+        # then swap back the placeholder values to their original values, properly escaped for the sql string as it'll be interpreted literally
+        row_text = str(tuple(row.values)).replace("'", '"').replace(apostrophie, "\\'").replace(quotationmark, '\\"')
+        sql_text = sql_text + row_text + ','   
         counter += 1 
         if counter == 999:
                 query_impala_basic(sql_text[0:len(sql_text)-1])
                 sql_text = base_sql_text
                 counter = 0
 
-    sql_text = sql_text
     query_impala_basic(sql_text[0:len(sql_text)-1])
 
     print(f"exported to {name}")
